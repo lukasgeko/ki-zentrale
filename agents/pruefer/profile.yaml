@@ -1,0 +1,18 @@
+# Wird von deploy/agenten_einspielen.py gelesen
+name: pruefer
+beschreibung: Prüft fertige Karten gegen Akzeptanzkriterien, bevor Ergebnisse an Lukas
+  gehen (Standard).
+modell:
+  provider: anthropic
+  model: claude-sonnet-5-5
+ampel: gruen
+toolsets:
+- kanban
+- file
+- web
+- clarify
+- immo_rechner
+plugins:
+- datenschutz-weiche
+- immo-rechner
+- teamregeln

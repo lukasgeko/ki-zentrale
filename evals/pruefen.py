@@ -10,8 +10,8 @@ Ablauf pro Frage:
 
 Aufrufe (auf dem Server, im Ordner ~/ki-zentrale-repo):
   python3 evals/pruefen.py --trocken                 # Probelauf ohne Kosten (Attrappen)
-  python3 evals/pruefen.py --agent chef              # zeigt Kostenschätzung, fragt nach
-  python3 evals/pruefen.py --agent chef --ja         # wirklich ausführen
+  python3 evals/pruefen.py --agent manager              # zeigt Kostenschätzung, fragt nach
+  python3 evals/pruefen.py --agent manager --ja         # wirklich ausführen
   python3 evals/pruefen.py --alle --ja
 Exit-Code 0 = alle geprüften Agenten ≥ Ziel (90 %), sonst 1.
 """
@@ -156,7 +156,7 @@ def regel_check(frage: dict, antwort: str) -> list[str]:
 # ------------------------------------------------------------------ Ablauf
 def pruefe_agent(agent: str, suffix: str, frage_fn, pruefer_fn, nur_ids=None, budget=None) -> dict:
     daten = lade(agent)
-    profil = "default" if agent == "chef" and not suffix else f"{agent}{suffix}"
+    profil = "default" if agent == "manager" and not suffix else f"{agent}{suffix}"
     ergebnisse = []
     for f in daten["fragen"]:
         if nur_ids and f["id"] not in nur_ids:

@@ -50,6 +50,8 @@ OK = [
     "Bauleiter brutto 60k",
     "Wie hoch sind die Bauzinsen aktuell, so um 3,5 %?",
     "Die Baukosten liegen bei 4.500 €/m² Wohnfläche.",
+    "KfW-Programm 297 Konditionen: Sollzins ab 2,1 %, bis 150.000 € je Wohneinheit",
+    "Aktuelle Bauzinsen bei der Sparkasse liegen im Durchschnitt bei 3,6 %",
 ]
 
 @pytest.mark.parametrize("text", ROT)

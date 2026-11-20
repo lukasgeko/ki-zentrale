@@ -1,4 +1,4 @@
-# Wird von deploy/agenten-einspielen.sh gelesen
+# Wird von deploy/agenten_einspielen.py gelesen
 name: immo-projekt
 beschreibung: 'Projektsteuerung Immobilienprojekt: Aufgaben, Zeitplan, Protokolle,
   Entscheidungen, Risiken, Beteiligte.'
@@ -7,9 +7,11 @@ modell:
   model: claude-sonnet-5-5
 ampel: gelb
 toolsets:
+- kanban
 - file
 - todo
 - memory
 - clarify
 plugins:
 - datenschutz-weiche
+- teamregeln

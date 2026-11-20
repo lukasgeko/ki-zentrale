@@ -1,5 +1,5 @@
 """Tests für Prüflauf und Prüfungsfragen."""
-import importlib.util, pathlib, sys
+import importlib.util, json, pathlib, sys
 import yaml, pytest
 
 WURZEL = pathlib.Path(__file__).resolve().parents[1]
@@ -38,7 +38,7 @@ def test_profile_vollstaendig(agent):
     # Kein Agent außer recherche/markt/recht hat Webzugriff; niemand hat Terminal
     assert "terminal" not in prof["toolsets"]
     if "web" in prof["toolsets"]:
-        assert agent in {"recherche", "immo-markt", "immo-recht"}
+        assert agent in {"recherche", "immo-markt", "immo-recht", "pruefer", "pruefer-streng"}
     for pl in prof["plugins"]:
         assert (WURZEL / "plugins" / pl / "plugin.yaml").exists(), pl
 
@@ -76,7 +76,7 @@ def test_deploy_trockenlauf(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(d, "DATEN", tmp_path)
     assert d.main(["--trocken"]) == 0
     out = capsys.readouterr().out
-    assert "chef-pruef" in out and "posteingang-pruef" in out
+    assert "manager-pruef" in out and "posteingang-pruef" in out
     assert not any(tmp_path.iterdir())   # Trockenlauf schreibt nichts
     assert "profiles/recherche/plugins/datenschutz-weiche" in out      # Plugins pro Profil
     assert "posteingang-pruef/plugins/gmail-entwuerfe  (TESTMODUS)" in out
@@ -129,3 +129,18 @@ def test_deploy_echt_in_tmp(tmp_path, monkeypatch):
     # zweiter Lauf legt alte Fassung beiseite statt zu löschen
     assert d.main(["--ausfuehren", "--agent", "posteingang", "--ohne-pruefprofile"]) == 0
     assert any((tmp_path / "profiles/posteingang/plugins-alt").iterdir())
+
+
+def test_pruef_soul_und_teamdatei(tmp_path, monkeypatch):
+    spec = importlib.util.spec_from_file_location("dep4", WURZEL / "deploy" / "agenten_einspielen.py")
+    d = importlib.util.module_from_spec(spec); spec.loader.exec_module(d)
+    monkeypatch.setattr(d, "DATEN", tmp_path); monkeypatch.setattr(d, "HERMES", "true")
+    assert d.main(["--ausfuehren", "--agent", "immo-markt", "--agent", "manager"]) == 0
+    team = json.loads((tmp_path / "profiles/immo-markt/plugins/teamregeln/team.json").read_text())["profile"]
+    assert "default" in team and "pruefer-streng" in team and "manager" not in team
+    echt = (tmp_path / "profiles/immo-markt/SOUL.md").read_text()
+    pruef = (tmp_path / "profiles/immo-markt-pruef/SOUL.md").read_text()
+    assert "PRÜFMODUS" not in echt and "PRÜFMODUS" in pruef
+    assert '"manager-pruef"' in pruef and '`pruefer-streng-pruef`' in pruef
+    mgr = (tmp_path / "profiles/manager-pruef/SOUL.md").read_text()
+    assert "`immo-markt-pruef`" in mgr and "`privat-pruef`" in mgr

@@ -1,4 +1,4 @@
-# Wird von deploy/agenten-einspielen.sh gelesen
+# Wird von deploy/agenten_einspielen.py gelesen
 name: recherche
 beschreibung: Gründliche Web-Recherche mit Quellen und Datum; vergleicht Optionen.
 modell:
@@ -6,8 +6,10 @@ modell:
   model: claude-sonnet-5-5
 ampel: gruen
 toolsets:
+- kanban
 - web
 - file
 - clarify
 plugins:
 - datenschutz-weiche
+- teamregeln

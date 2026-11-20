@@ -1,0 +1,18 @@
+# Wird von deploy/agenten_einspielen.py gelesen
+name: pruefer-streng
+beschreibung: Prüft kritische Karten (Geld, Recht, Verträge, Sicherheit) besonders
+  gründlich.
+modell:
+  provider: anthropic
+  model: claude-opus-5-5
+ampel: gruen
+toolsets:
+- kanban
+- file
+- web
+- clarify
+- immo_rechner
+plugins:
+- datenschutz-weiche
+- immo-rechner
+- teamregeln

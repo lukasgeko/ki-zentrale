@@ -1,4 +1,4 @@
-# Wird von deploy/agenten-einspielen.sh gelesen
+# Wird von deploy/agenten_einspielen.py gelesen
 name: immo-markt
 beschreibung: Grundstück, Lage, Planungsrecht, Bodenrichtwerte, Miet- und Kaufpreise,
   Inserats-Alarme.
@@ -7,6 +7,7 @@ modell:
   model: claude-sonnet-5-5
 ampel: gruen
 toolsets:
+- kanban
 - web
 - file
 - clarify
@@ -14,3 +15,4 @@ toolsets:
 plugins:
 - datenschutz-weiche
 - immo-rechner
+- teamregeln

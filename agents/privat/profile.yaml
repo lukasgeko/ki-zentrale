@@ -1,4 +1,4 @@
-# Wird von deploy/agenten-einspielen.sh gelesen
+# Wird von deploy/agenten_einspielen.py gelesen
 name: privat
 beschreibung: '🔴 Private Daten: echte Kredit-, Einkommens-, Vertrags- und Familienfinanzzahlen.
   Lokale KI, kein Internet.'
@@ -7,8 +7,10 @@ modell:
   model: qwen3:14b
 ampel: rot
 toolsets:
+- kanban
 - file
 - clarify
 - immo_rechner
 plugins:
 - immo-rechner
+- teamregeln

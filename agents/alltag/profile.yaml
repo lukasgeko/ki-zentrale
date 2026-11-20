@@ -1,4 +1,4 @@
-# Wird von deploy/agenten-einspielen.sh gelesen
+# Wird von deploy/agenten_einspielen.py gelesen
 name: alltag
 beschreibung: Erinnerungen, Einkaufsliste, kleine Alltagsfragen.
 modell:
@@ -6,9 +6,11 @@ modell:
   model: claude-haiku-5-5
 ampel: gelb
 toolsets:
+- kanban
 - cronjob
 - memory
 - file
 - clarify
 plugins:
 - datenschutz-weiche
+- teamregeln

@@ -226,15 +226,15 @@ hc config set approvals.single_query_mode deny
 hc config set auth.adopt_external_logins false
 ok "Grundregeln gesetzt: Modell $CHIEF_MODEL, Freigabe-Modus 'manuell'"
 
-# Persönlichkeit des Chefs (SOUL.md) einspielen – vorherige Fassung wird mit Zeitstempel gesichert
-CHEF_SOUL="$SCRIPT_DIR/../agents/chef/SOUL.md"; GEMEINSAM="$SCRIPT_DIR/../agents/_gemeinsam.md"
-if [[ -f "$CHEF_SOUL" && -f "$GEMEINSAM" ]]; then
+# Persönlichkeit des Managers (SOUL.md) einspielen – vorherige Fassung wird mit Zeitstempel gesichert
+MANAGER_SOUL="$SCRIPT_DIR/../agents/manager/SOUL.md"; GEMEINSAM="$SCRIPT_DIR/../agents/_gemeinsam.md"
+if [[ -f "$MANAGER_SOUL" && -f "$GEMEINSAM" ]]; then
   [[ -f "$HDIR/hermes-data/SOUL.md" ]] && cp "$HDIR/hermes-data/SOUL.md" "$HDIR/hermes-data/SOUL.bak-$(date +%F-%H%M)"
-  cat "$CHEF_SOUL" "$GEMEINSAM" > "$HDIR/hermes-data/SOUL.md"
+  cat "$MANAGER_SOUL" "$GEMEINSAM" > "$HDIR/hermes-data/SOUL.md"
   chown "$SERVER_USER:$SERVER_USER" "$HDIR/hermes-data/SOUL.md"; chmod 644 "$HDIR/hermes-data/SOUL.md"
-  ok "Chef-Persönlichkeit (SOUL.md) eingespielt"
+  ok "Manager-Persönlichkeit (SOUL.md) eingespielt"
 else
-  warn "agents/chef/SOUL.md nicht gefunden – Hermes nutzt vorerst seine Standard-Persönlichkeit."
+  warn "agents/manager/SOUL.md nicht gefunden – Hermes nutzt vorerst seine Standard-Persönlichkeit."
 fi
 
 docker compose up -d

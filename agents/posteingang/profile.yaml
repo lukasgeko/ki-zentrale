@@ -1,4 +1,4 @@
-# Wird von deploy/agenten-einspielen.sh gelesen
+# Wird von deploy/agenten_einspielen.py gelesen
 name: posteingang
 beschreibung: 'Gmail: sortieren, labeln, suchen, zusammenfassen, Antwort-Entwürfe
   anlegen. Kann nicht senden.'
@@ -7,8 +7,10 @@ modell:
   model: claude-haiku-5-5
 ampel: gelb
 toolsets:
+- kanban
 - gmail_entwuerfe
 - clarify
 plugins:
 - gmail-entwuerfe
 - datenschutz-weiche
+- teamregeln

@@ -1,4 +1,4 @@
-# Wird von deploy/agenten-einspielen.sh gelesen
+# Wird von deploy/agenten_einspielen.py gelesen
 name: immo-dokumente
 beschreibung: 'Erstellt Entwürfe: Exposé, Bankunterlagen-Mappe, Anschreiben, Präsentationen
   für Familie/Partner.'
@@ -7,7 +7,9 @@ modell:
   model: claude-sonnet-5-5
 ampel: gelb
 toolsets:
+- kanban
 - file
 - clarify
 plugins:
 - datenschutz-weiche
+- teamregeln

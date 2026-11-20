@@ -8,7 +8,7 @@ Was passiert pro Agent (agents/<name>/):
   1. Profil anlegen (falls nicht vorhanden) + Prüf-Zwilling "<name>-pruef" für den Prüflauf
   2. SOUL.md = agents/<name>/SOUL.md + agents/_gemeinsam.md
   3. Modell/Provider setzen, nicht erlaubte Werkzeug-Gruppen abschalten, Plugins freischalten
-Der Agent "chef" ist das Standard-Profil ("default").
+Der Agent "manager" ist das Standard-Profil ("default").
 
 Aufruf auf dem Server (Repo liegt in ~/ki-zentrale-repo, Daten in ~/ki-zentrale/hermes-data):
   python3 deploy/agenten_einspielen.py --trocken          # zeigt nur, was passieren würde
@@ -47,6 +47,23 @@ ALLE_TOOLSETS = [
 # Vor dem ersten echten Lauf mit `hermes tools list` abgleichen: unbekannte Gruppen ergänzen.
 
 
+BOARDS = ["immobilienprojekt", "alltag", "pruefung"]
+TEAM_NAMEN: list[str] = []
+
+
+def pruef_soul(text: str, namen: list[str]) -> str:
+    """Prüf-Zwillinge sprechen nur mit Prüf-Zwillingen und arbeiten auf dem Board 'pruefung'."""
+    for n in sorted(namen, key=len, reverse=True):
+        if n == "default":
+            continue
+        text = re.sub(rf"`{re.escape(n)}`", f"`{n}-pruef`", text)
+        text = re.sub(rf"(['\"]){re.escape(n)}(['\"])", rf"\g<1>{n}-pruef\g<2>", text)
+    text = text.replace('`assignee: "default"`', '`assignee: "manager-pruef"`').replace("assignee: default", "assignee: manager-pruef")
+    text = text.replace('assignee=\'default\'', "assignee='manager-pruef'").replace('"default"', '"manager-pruef"')
+    return text + ("\n\n## PRÜFMODUS\nDu bist ein Prüf-Zwilling. Alle Karten gehören auf das Board `pruefung` "
+                   "(bei kanban_create immer board='pruefung'). Der Manager heißt hier `manager-pruef`.\n")
+
+
 def profile() -> list[dict]:
     out = []
     for d in sorted((REPO / "agents").iterdir()):
@@ -54,6 +71,7 @@ def profile() -> list[dict]:
             p = yaml.safe_load((d / "profile.yaml").read_text())
             p["soul"] = (d / "SOUL.md").read_text() + (REPO / "agents" / "_gemeinsam.md").read_text()
             out.append(p)
+    TEAM_NAMEN[:] = sorted({"default" if x["name"] == "manager" else x["name"] for x in out})
     return out
 
 
@@ -62,8 +80,8 @@ def m_lokal(p: dict) -> bool:
 
 
 def hermes_name(agent: str, pruef: bool) -> str:
-    if agent == "chef":
-        return "chef-pruef" if pruef else "default"
+    if agent == "manager":
+        return "manager-pruef" if pruef else "default"
     return f"{agent}-pruef" if pruef else agent
 
 
@@ -79,7 +97,7 @@ def schritte(p: dict, pruef: bool) -> list[tuple[str, object]]:
             # Lokales Profil bekommt KEINE Cloud-Schlüssel: so kann es auch versehentlich nie in die Cloud ausweichen
             create.append("--no-credentials")
         s.append(("befehl", create))
-    s.append(("datei", (home / "SOUL.md", p["soul"])))
+    s.append(("datei", (home / "SOUL.md", pruef_soul(p["soul"], TEAM_NAMEN) if pruef else p["soul"])))
     m = p["modell"]
     s.append(("befehl", pfx + ["config", "set", "model.provider", "custom" if m["provider"] == "ollama" else m["provider"]]))
     s.append(("befehl", pfx + ["config", "set", "model.default", m["model"]]))
@@ -87,6 +105,8 @@ def schritte(p: dict, pruef: bool) -> list[tuple[str, object]]:
         s.append(("befehl", pfx + ["config", "set", "model.base_url", OLLAMA_URL]))
     s.append(("befehl", pfx + ["config", "set", "agent.disabled_toolsets", json.dumps(aus)]))
     s.append(("befehl", pfx + ["config", "set", "plugins.enabled", json.dumps(p["plugins"])]))
+    if p["name"] == "manager":
+        s.append(("befehl", pfx + ["config", "set", "kanban.auto_decompose", "false"]))
     for k, v in (("approvals.mode", "manual"), ("approvals.cron_mode", "deny"),
                  ("approvals.unattended_mode", "deny"), ("approvals.single_query_mode", "deny")):
         s.append(("befehl", pfx + ["config", "set", k, v]))
@@ -112,6 +132,8 @@ def plugins_kopieren(p: dict, name: str, pruef: bool, trocken: bool) -> None:
             alt.mkdir(exist_ok=True)
             shutil.move(str(ziel / pl_name), str(alt / f"{pl_name}-{stempel}"))
         shutil.copytree(quelle, ziel / pl_name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        if pl_name == "teamregeln":
+            (ziel / pl_name / "team.json").write_text(json.dumps({"profile": TEAM_NAMEN}, ensure_ascii=False))
         if pruef and pl_name == "gmail-entwuerfe":
             (ziel / pl_name / "TESTMODUS").write_text("Prüfprofil: simuliertes Postfach, nie das echte Konto.\n")
 
@@ -138,6 +160,11 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
 
     fehler = 0
+    for b in BOARDS:  # einmalig; ein bereits vorhandenes Board meldet nur einen Hinweis
+        cmd = shlex.split(HERMES) + ["kanban", "boards", "create", b]
+        print("  $ " + " ".join(shlex.quote(c) for c in cmd))
+        if not a.trocken:
+            subprocess.run(cmd, capture_output=True, text=True)
     for p in profile():
         if a.agent and p["name"] not in a.agent:
             continue
@@ -174,8 +201,7 @@ def main(argv=None) -> int:
         print("\nDanach: 1) Hermes neu starten (cd ~/ki-zentrale && docker compose restart)")
         print("        2) je Profil prüfen: hermes -p <name> plugins list  → alle Plugins 'enabled'? Sonst STOPP.")
         print("        3) Prüflauf: python3 evals/pruefen.py --alle")
-    print("\nHinweis Phase 3: Übergaben Chef → Spezialisten brauchen das Plugin 'advanced-delegation' mit "
-          "delegation.backend=profile_routes. Wird mit Claude Code gegen die aktuelle Doku eingerichtet.")
+    print("\nHinweis: Board-Einrichtung (einmalig) siehe Ausgabe oben; Auto-Zerlegung ist aus.")
     print(f"\n{'Probelauf' if a.trocken else 'Fertig'}: {fehler} Fehler.")
     return 1 if fehler else 0
 

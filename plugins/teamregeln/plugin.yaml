@@ -1,0 +1,5 @@
+name: teamregeln
+version: "1.0"
+description: "Erzwingt die Teamregeln auf dem Aufgaben-Board: nur der Manager vergibt Aufgaben, nur Prüfer schließen ab, privat wird von Lukas geprüft."
+provides_hooks:
+  - pre_tool_call

@@ -1,0 +1,18 @@
+# Wird von deploy/agenten_einspielen.py gelesen
+name: manager
+beschreibung: 'Einziger Ansprechpartner: plant, zerlegt Aufträge in Karten, vergibt
+  sie, koordiniert Anfragen, berichtet geprüfte Ergebnisse.'
+modell:
+  provider: anthropic
+  model: claude-sonnet-5-5
+ampel: gelb
+toolsets:
+- kanban
+- memory
+- todo
+- clarify
+- session_search
+- file
+plugins:
+- datenschutz-weiche
+- teamregeln

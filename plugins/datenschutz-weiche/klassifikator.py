@@ -30,16 +30,18 @@ MUSTER_HART = {
 
 # STARK: Themenwort + Zahl in der Nähe genügt (das ist praktisch immer persönlich)
 STARK = {
-    "Kredit-/Finanzierungsangebot": r"(?:kredit|darlehens?|finanzierungs?|baufinanzierungs?)(?:angebot|konditionen|zusage|vertrag)\w*|\bkonditionen\b|\bzusage\b",
+    "Kredit-/Finanzierungsangebot": r"(?:kredit|darlehens?|finanzierungs?|baufinanzierungs?)(?:angebot|konditionen|zusage|vertrag)\w*",
     "Einkommen": r"\b(?:gehalt\w*|lohnabrechnung\w*|gehaltsabrechnung\w*|verdien\w*)",
     "Kontostand/Schulden": r"\b(?:kontostand\w*|kontoauszug\w*|restschuld\w*|schufa\w*)",
 }
 # WEICH: zählt nur mit Zahl UND (persönlichem Bezug ODER genanntem Kreditgeber)
 WEICH = {
-    "Kredit/Zins": r"\b(?:kredit\w*|darlehen\w*|sollzins\w*|effektivzins\w*|zins\w*|tilgung\w*|rate\b|raten\b|bereitstellungszins\w*)",
+    "Kredit/Zins": r"\b(?:kredit\w*|darlehen\w*|sollzins\w*|effektivzins\w*|zins\w*|tilgung\w*|rate\b|raten\b|bereitstellungszins\w*|konditionen|zusage|angebot\w*|bietet|bieten)",
     "Vermögen/Einkommen": r"\b(?:eigenkapital\w*|ek\b|vermögen\w*|ersparnis\w*|erspart\w*|depot\w*|konto\b|konten\b|einkommen\w*|netto\b|brutto\b|schulden\w*)",
 }
 KREDITGEBER = re.compile(r"\b(?:sparkasse\w*|volksbank\w*|raiffeisen\w*|bank\b|banken\b|kfw\b|ing\b|dkb\b|commerzbank|hypovereinsbank|interhyp|dr\.?\s?klein|bausparkasse\w*)", re.I)
+# Öffentliche Marktinfos (Förderprogramme, Durchschnittszinsen) sind nicht privat, auch wenn eine Bank genannt wird
+OEFFENTLICH_RE = re.compile(r"(?:programm\w*|förder\w*|foerder\w*|marktzins\w*|bauzinsen|durchschnitt\w*|typisch\w*|üblich\w*|aktuell\w*|vergleichsportal|ab\s\d)", re.I)
 NAEHE = 80  # Zeichen
 
 # Rechenbeispiele mit ausgedachten Zahlen sind nicht privat – außer es ist erkennbar "unseres"
@@ -121,7 +123,7 @@ def bewerte(text: str | None) -> Ergebnis:
         for name, rx in _STARK_RE.items():
             if nah(rx):
                 gruende.append(name)
-        if persoenlich or KREDITGEBER.search(t):
+        if persoenlich or (KREDITGEBER.search(t) and not OEFFENTLICH_RE.search(t)):
             for name, rx in _WEICH_RE.items():
                 if nah(rx):
                     gruende.append(name)

@@ -1,4 +1,4 @@
-# Wird von deploy/agenten-einspielen.sh gelesen
+# Wird von deploy/agenten_einspielen.py gelesen
 name: immo-recht
 beschreibung: 'Recherche zu Recht und Steuern rund ums Projekt: GbR, Kaufvertrag,
   Notar, Grunderwerbsteuer, Baurecht. Keine Beratung.'
@@ -7,8 +7,10 @@ modell:
   model: claude-sonnet-5-5
 ampel: gruen
 toolsets:
+- kanban
 - web
 - file
 - clarify
 plugins:
 - datenschutz-weiche
+- teamregeln

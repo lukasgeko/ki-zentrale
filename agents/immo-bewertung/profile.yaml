@@ -1,4 +1,4 @@
-# Wird von deploy/agenten-einspielen.sh gelesen
+# Wird von deploy/agenten_einspielen.py gelesen
 name: immo-bewertung
 beschreibung: 'Rechnungen mit öffentlichen oder Beispielzahlen: Kaufnebenkosten, Baukosten,
   Rendite, Cashflow, Vermieten vs. Verkaufen, Sensitivität.'
@@ -7,9 +7,11 @@ modell:
   model: claude-sonnet-5-5
 ampel: gelb
 toolsets:
+- kanban
 - file
 - clarify
 - immo_rechner
 plugins:
 - datenschutz-weiche
 - immo-rechner
+- teamregeln

@@ -19,7 +19,7 @@ Zwei unabhängige Sicherheitsprüfungen (Opus, ohne Vorwissen) wurden durchgefü
 ## Das Team
 | Agent | Aufgabe | KI-Modell |
 |---|---|---|
-| chef | Ansprechpartner, verteilt Aufgaben | Claude Sonnet 5.5 |
+| manager | Einziger Ansprechpartner, plant, verteilt, koordiniert | Claude Sonnet 5.5 |
 | posteingang | Gmail sortieren/suchen/Entwürfe | Claude Haiku 5.5 |
 | alltag | Erinnerungen, Einkaufsliste | Claude Haiku 5.5 |
 | recherche | Web-Recherche mit Quellen | Claude Sonnet 5.5 |
