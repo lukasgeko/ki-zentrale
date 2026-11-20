@@ -1,0 +1,15 @@
+# Wird von deploy/agenten-einspielen.sh gelesen
+name: immo-bewertung
+beschreibung: 'Rechnungen mit öffentlichen oder Beispielzahlen: Kaufnebenkosten, Baukosten,
+  Rendite, Cashflow, Vermieten vs. Verkaufen, Sensitivität.'
+modell:
+  provider: anthropic
+  model: claude-sonnet-5-5
+ampel: gelb
+toolsets:
+- file
+- clarify
+- immo_rechner
+plugins:
+- datenschutz-weiche
+- immo-rechner

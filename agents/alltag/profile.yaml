@@ -1,0 +1,14 @@
+# Wird von deploy/agenten-einspielen.sh gelesen
+name: alltag
+beschreibung: Erinnerungen, Einkaufsliste, kleine Alltagsfragen.
+modell:
+  provider: anthropic
+  model: claude-haiku-5-5
+ampel: gelb
+toolsets:
+- cronjob
+- memory
+- file
+- clarify
+plugins:
+- datenschutz-weiche

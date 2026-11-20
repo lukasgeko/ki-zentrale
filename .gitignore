@@ -1,0 +1,23 @@
+# Geheimnisse – niemals ins Repo
+.env
+*.env.local
+**/.env
+**/credentials*.json
+**/token*.json
+**/client_secret*.json
+*.pem
+*.key
+secrets/
+# Laufzeitdaten vom Server
+hermes-data/
+projekte/
+_papierkorb/
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+# Prüfberichte (können private Inhalte enthalten)
+evals/berichte/
+# macOS
+.DS_Store

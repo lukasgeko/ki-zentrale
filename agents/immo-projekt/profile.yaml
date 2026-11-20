@@ -1,0 +1,15 @@
+# Wird von deploy/agenten-einspielen.sh gelesen
+name: immo-projekt
+beschreibung: 'Projektsteuerung Immobilienprojekt: Aufgaben, Zeitplan, Protokolle,
+  Entscheidungen, Risiken, Beteiligte.'
+modell:
+  provider: anthropic
+  model: claude-sonnet-5-5
+ampel: gelb
+toolsets:
+- file
+- todo
+- memory
+- clarify
+plugins:
+- datenschutz-weiche

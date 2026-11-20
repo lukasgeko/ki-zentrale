@@ -1,0 +1,18 @@
+# Wird von deploy/agenten-einspielen.sh gelesen
+name: chef
+beschreibung: Spricht mit Lukas, plant, verteilt Aufgaben an die Spezialisten, führt
+  Projektstatus und Gedächtnis.
+modell:
+  provider: anthropic
+  model: claude-sonnet-5-5
+ampel: gelb
+toolsets:
+- delegation
+- memory
+- file
+- todo
+- cronjob
+- clarify
+- session_search
+plugins:
+- datenschutz-weiche

@@ -1,0 +1,10 @@
+name: gmail-entwuerfe
+version: "1.0"
+description: "Gmail ohne Sende-Funktion: suchen, lesen, labeln, archivieren, Entwürfe anlegen. Senden, Weiterleiten, Löschen sind technisch unmöglich."
+provides_tools:
+  - gmail_suchen
+  - gmail_lesen
+  - gmail_labels
+  - gmail_label_setzen
+  - gmail_archivieren
+  - gmail_entwurf_anlegen

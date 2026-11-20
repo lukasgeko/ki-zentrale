@@ -1,0 +1,16 @@
+# Wird von deploy/agenten-einspielen.sh gelesen
+name: immo-markt
+beschreibung: Grundstück, Lage, Planungsrecht, Bodenrichtwerte, Miet- und Kaufpreise,
+  Inserats-Alarme.
+modell:
+  provider: anthropic
+  model: claude-sonnet-5-5
+ampel: gruen
+toolsets:
+- web
+- file
+- clarify
+- immo_rechner
+plugins:
+- datenschutz-weiche
+- immo-rechner

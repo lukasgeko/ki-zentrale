@@ -1,0 +1,13 @@
+# Wird von deploy/agenten-einspielen.sh gelesen
+name: immo-dokumente
+beschreibung: 'Erstellt Entwürfe: Exposé, Bankunterlagen-Mappe, Anschreiben, Präsentationen
+  für Familie/Partner.'
+modell:
+  provider: anthropic
+  model: claude-sonnet-5-5
+ampel: gelb
+toolsets:
+- file
+- clarify
+plugins:
+- datenschutz-weiche

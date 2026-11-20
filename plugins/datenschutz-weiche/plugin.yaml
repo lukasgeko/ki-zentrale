@@ -1,0 +1,7 @@
+name: datenschutz-weiche
+version: "1.0"
+description: "Ampel 🟢🟡🔴 – hält private Daten (IBAN, Steuer-ID, Kredit-/Gehaltszahlen …) von Cloud-Modellen und dem Web fern."
+provides_hooks:
+  - pre_llm_call
+  - pre_tool_call
+  - transform_tool_result

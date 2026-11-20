@@ -1,0 +1,11 @@
+name: immo-rechner
+version: "1.0"
+description: "Immobilien-Rechner: Kaufnebenkosten, Annuitätendarlehen, Rendite, Verkauf, Eigenkapitalrendite, Sensitivität, AfA. Zeigt immer die Annahmen."
+provides_tools:
+  - immo_kaufnebenkosten
+  - immo_annuitaet
+  - immo_rendite
+  - immo_verkauf
+  - immo_eigenkapitalrendite
+  - immo_sensitivitaet_vermietung
+  - immo_afa
