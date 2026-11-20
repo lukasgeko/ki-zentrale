@@ -12,7 +12,8 @@ Lukas' private KI-Plattform: ein Team aus KI-Agenten auf einem eigenen Server, e
 | `plugins/immo-rechner/` | Kaufnebenkosten, Annuität, Rendite, Verkauf, Sensitivität, AfA | ✅ getestet (von Hand nachgerechnet) |
 | `evals/` | 121 Prüfungsfragen + automatischer Prüflauf (`pruefen.py`) | ✅ Trockenlauf getestet |
 | `deploy/` | Spielt Agenten + Plugins in Hermes ein (pro Profil, Prüf-Zwillinge mit Test-Postfach) | ⚠️ in Testordner erprobt; erster echter Lauf mit Claude Code |
-| `tests/` | 200 automatische Tests: `python3 -m pytest -q` | ✅ alle grün |
+| `lokal/` | **Testvariante für den Mac** (Docker, nur 127.0.0.1, 8-GB-Speicherlimit): `bash lokal/ki-lokal.sh einrichten` | ✅ mit Docker-Attrappe getestet, erster echter Start auf dem Mac offen |
+| `tests/` | 206 automatische Tests: `python3 -m pytest -q` | ✅ alle grün |
 
 Zwei unabhängige Sicherheitsprüfungen (Opus, ohne Vorwissen) wurden durchgeführt; alle BLOCKER- und HOCH-Befunde sind behoben und mit Tests abgesichert.
 
