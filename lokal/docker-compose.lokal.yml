@@ -1,0 +1,24 @@
+# KI-Zentrale – LOKALE Testvariante für den Mac (kein Server, kein Tailscale, keine Kosten außer API-Nutzung).
+# Das Dashboard ist nur auf diesem Mac erreichbar (127.0.0.1) und verlangt trotzdem ein Login.
+# Gestartet wird alles über lokal/ki-lokal.sh – dieses File nicht von Hand benutzen.
+services:
+  hermes:
+    image: ${HERMES_PIN:?HERMES_PIN fehlt - bitte ki-lokal.sh benutzen}
+    container_name: hermes
+    restart: "no"                       # Mac ist oft aus: nichts startet von allein
+    ports:
+      - "127.0.0.1:9119:9119"           # nur dieser Mac, niemals 0.0.0.0
+    volumes:
+      - ${KI_LOKAL_DIR:?KI_LOKAL_DIR fehlt}/hermes-data:/opt/data
+    environment:
+      - HERMES_UID=1000
+      - HERMES_GID=1000
+      - HERMES_DASHBOARD=1
+      - HERMES_DASHBOARD_HOST=0.0.0.0   # im Container nötig, damit der Port erreichbar ist (Login ist Pflicht)
+      - HERMES_DASHBOARD_PORT=9119
+      - TZ=Europe/Berlin
+    mem_limit: 3g                       # der Mac hat 8 GB: Hermes bekommt höchstens 3 GB
+    command: ["gateway", "run"]
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
