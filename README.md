@@ -5,14 +5,16 @@ Lukas' private KI-Plattform: ein Team aus KI-Agenten auf einem eigenen Server, e
 ## Was hier drin ist
 | Ordner | Inhalt | Stand |
 |---|---|---|
-| `server/` | Server-Einrichtung, Lockdown, nächtliches Backup | ✅ geprüft (kalte Prüfung, 16 Befunde eingearbeitet), noch nicht auf echtem Server gelaufen |
+| `server/` | Server-Einrichtung, Lockdown, nächtliches Backup | ✅ unabhängig geprüft (16 Befunde eingearbeitet), noch nicht auf echtem Server gelaufen |
 | `agents/` | 10 Agenten: Persönlichkeit (`SOUL.md`) + Rechte (`profile.yaml`); `_gemeinsam.md` = Regeln für alle | ✅ Entwurf fertig, Fachcheck durch Lukas offen |
 | `plugins/gmail-entwuerfe/` | Gmail-Zugang **ohne** Senden/Löschen (nur suchen, lesen, labeln, archivieren, Entwürfe) | ✅ getestet mit Attrappe |
 | `plugins/datenschutz-weiche/` | 🟢🟡🔴-Ampel: hält private Daten von Cloud-KI und Web fern | ✅ getestet |
 | `plugins/immo-rechner/` | Kaufnebenkosten, Annuität, Rendite, Verkauf, Sensitivität, AfA | ✅ getestet (von Hand nachgerechnet) |
 | `evals/` | 121 Prüfungsfragen + automatischer Prüflauf (`pruefen.py`) | ✅ Trockenlauf getestet |
-| `deploy/` | Spielt Agenten + Plugins in Hermes ein | ⚠️ Entwurf, erster Lauf mit Claude Code |
-| `tests/` | Automatische Tests: `python3 -m pytest -q` | ✅ alle grün |
+| `deploy/` | Spielt Agenten + Plugins in Hermes ein (pro Profil, Prüf-Zwillinge mit Test-Postfach) | ⚠️ in Testordner erprobt; erster echter Lauf mit Claude Code |
+| `tests/` | 150 automatische Tests: `python3 -m pytest -q` | ✅ alle grün |
+
+Zwei unabhängige Sicherheitsprüfungen (Opus, ohne Vorwissen) wurden durchgeführt; alle BLOCKER- und HOCH-Befunde sind behoben und mit Tests abgesichert.
 
 ## Das Team
 | Agent | Aufgabe | KI-Modell |
