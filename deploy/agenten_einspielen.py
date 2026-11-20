@@ -52,16 +52,19 @@ TEAM_NAMEN: list[str] = []
 
 
 def pruef_soul(text: str, namen: list[str]) -> str:
-    """Prüf-Zwillinge sprechen nur mit Prüf-Zwillingen und arbeiten auf dem Board 'pruefung'."""
+    """Prüf-Zwillinge sprechen nur mit Prüf-Zwillingen und arbeiten auf dem Board 'pruefung'.
+    Profilnamen werden als ganze Namen ersetzt (nicht in Pfaden wie projekte/x/privat/ und nicht
+    als Teil längerer Namen wie pruefer-streng)."""
     for n in sorted(namen, key=len, reverse=True):
         if n == "default":
             continue
-        text = re.sub(rf"`{re.escape(n)}`", f"`{n}-pruef`", text)
-        text = re.sub(rf"(['\"]){re.escape(n)}(['\"])", rf"\g<1>{n}-pruef\g<2>", text)
-    text = text.replace('`assignee: "default"`', '`assignee: "manager-pruef"`').replace("assignee: default", "assignee: manager-pruef")
-    text = text.replace('assignee=\'default\'', "assignee='manager-pruef'").replace('"default"', '"manager-pruef"')
-    return text + ("\n\n## PRÜFMODUS\nDu bist ein Prüf-Zwilling. Alle Karten gehören auf das Board `pruefung` "
-                   "(bei kanban_create immer board='pruefung'). Der Manager heißt hier `manager-pruef`.\n")
+        text = re.sub(rf"(?<![\w/-]){re.escape(n)}(?![\w/-])", f"{n}-pruef", text)
+    text = re.sub(r"(['\"`])default(['\"`])", r"\g<1>manager-pruef\g<2>", text)
+    text = text.replace("assignee: default", "assignee: manager-pruef")
+    text = re.sub(r'board: "(immobilienprojekt|alltag)"', 'board: "pruefung"', text)
+    return text + ("\n\n## PRÜFMODUS\nDu bist ein Prüf-Zwilling. Bei JEDEM Board-Werkzeug (kanban_*) gilt "
+                   "board='pruefung'. Der Manager heißt hier `manager-pruef`, die Prüfer `pruefer-pruef` und "
+                   "`pruefer-streng-pruef`.\n")
 
 
 def profile() -> list[dict]:

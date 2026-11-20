@@ -41,7 +41,9 @@ WEICH = {
 }
 KREDITGEBER = re.compile(r"\b(?:sparkasse\w*|volksbank\w*|raiffeisen\w*|bank\b|banken\b|kfw\b|ing\b|dkb\b|commerzbank|hypovereinsbank|interhyp|dr\.?\s?klein|bausparkasse\w*)", re.I)
 # Öffentliche Marktinfos (Förderprogramme, Durchschnittszinsen) sind nicht privat, auch wenn eine Bank genannt wird
-OEFFENTLICH_RE = re.compile(r"(?:programm\w*|förder\w*|foerder\w*|marktzins\w*|bauzinsen|durchschnitt\w*|typisch\w*|üblich\w*|aktuell\w*|vergleichsportal|ab\s\d)", re.I)
+# Gilt nur, wenn KEIN konkreter Darlehens-/Geldbetrag im Text steht (sonst ist es ein Angebot).
+OEFFENTLICH_RE = re.compile(r"(?:kfw-?programm\w*|förderprogramm\w*|foerderprogramm\w*|marktzins\w*|aktuelle bauzinsen|bauzinsen aktuell|durchschnittszins\w*|im durchschnitt|vergleichsportal)", re.I)
+GELDBETRAG_RE = re.compile(r"\d[\d.\s]*(?:,\d+)?\s?(?:€|eur\b|euro\b|tsd\.?|tausend\b|mio\.?|k\b)", re.I)
 NAEHE = 80  # Zeichen
 
 # Rechenbeispiele mit ausgedachten Zahlen sind nicht privat – außer es ist erkennbar "unseres"
@@ -123,7 +125,8 @@ def bewerte(text: str | None) -> Ergebnis:
         for name, rx in _STARK_RE.items():
             if nah(rx):
                 gruende.append(name)
-        if persoenlich or (KREDITGEBER.search(t) and not OEFFENTLICH_RE.search(t)):
+        oeffentlich = bool(OEFFENTLICH_RE.search(t)) and not GELDBETRAG_RE.search(t)
+        if persoenlich or (KREDITGEBER.search(t) and not oeffentlich):
             for name, rx in _WEICH_RE.items():
                 if nah(rx):
                     gruende.append(name)

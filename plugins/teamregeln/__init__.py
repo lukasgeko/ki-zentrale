@@ -30,8 +30,22 @@ def _profil() -> str | None:
         return os.environ.get("HERMES_PROFILE_NAME") or os.environ.get("HERMES_PROFILE")
 
 
+def _karte(task_id: str, board: str | None = None):
+    """(assignee, titel+text) einer Karte lesen; None wenn nicht möglich (→ Regeln blockieren im Zweifel)."""
+    try:
+        from hermes_cli import kanban_db as kb  # Hermes-intern
+        from hermes_cli import kanban_db_connect as kbc
+        with kbc.connect_closing(board=board or os.environ.get("HERMES_KANBAN_BOARD") or None) as conn:
+            t = kb.get_task(conn, task_id)
+        return None if t is None else (t.assignee or "", f"{t.title or ''}\n{t.body or ''}")
+    except Exception:  # pragma: no cover - außerhalb von Hermes
+        return None
+
+
 def vor_werkzeug(tool_name=None, args=None, **kwargs):
-    meldung = pruefe(_profil(), tool_name, args, os.environ.get("HERMES_KANBAN_TASK"), _team())
+    board = (args or {}).get("board") if isinstance(args, dict) else None
+    meldung = pruefe(_profil(), tool_name, args, os.environ.get("HERMES_KANBAN_TASK"), _team(),
+                     board_env=os.environ.get("HERMES_KANBAN_BOARD"), karte=lambda tid: _karte(tid, board))
     if meldung:
         log.warning("%s: %s", tool_name, meldung)
         return {"action": "block", "message": meldung}

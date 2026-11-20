@@ -32,6 +32,9 @@ ROT = [
     "Restschuld 210.000",
     "Ich verdiene 3.100 im Monat",
     "Zinsen 3,9 Prozent auf unser Darlehen von 450 Tsd",
+    # Fälle aus der dritten kalten Prüfung
+    "Sparkasse Musterstadt: Darlehen 420.000 EUR, Sollzins 3,85 %, Tilgung 2 %, Angebot gültig bis 30.11., aktuell",
+    "Volksbank Konditionen: Darlehen 380.000 €, Rate 1.850 EUR, Zinsbindung ab 15 Jahren",
 ]
 OK = [
     "Wie hoch ist die Grunderwerbsteuer in Bayern? 3,5 %?",
@@ -50,7 +53,7 @@ OK = [
     "Bauleiter brutto 60k",
     "Wie hoch sind die Bauzinsen aktuell, so um 3,5 %?",
     "Die Baukosten liegen bei 4.500 €/m² Wohnfläche.",
-    "KfW-Programm 297 Konditionen: Sollzins ab 2,1 %, bis 150.000 € je Wohneinheit",
+    "KfW-Programm 297: Sollzins ab 2,1 % für Neubau",
     "Aktuelle Bauzinsen bei der Sparkasse liegen im Durchschnitt bei 3,6 %",
 ]
 

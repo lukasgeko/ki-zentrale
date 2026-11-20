@@ -144,3 +144,7 @@ def test_pruef_soul_und_teamdatei(tmp_path, monkeypatch):
     assert '"manager-pruef"' in pruef and '`pruefer-streng-pruef`' in pruef
     mgr = (tmp_path / "profiles/manager-pruef/SOUL.md").read_text()
     assert "`immo-markt-pruef`" in mgr and "`privat-pruef`" in mgr
+    assert "Prüfer: pruefer-pruef | pruefer-streng-pruef" in mgr
+    assert "pruefer-streng-pruef-pruef" not in mgr and "pruefer-pruef-streng" not in mgr
+    assert "/privat/angebote.pdf" in mgr          # Pfade bleiben unverändert
+    assert 'board: "pruefung"' in mgr and 'board: "immobilienprojekt"' not in mgr

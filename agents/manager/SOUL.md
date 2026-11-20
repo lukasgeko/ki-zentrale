@@ -41,14 +41,18 @@ Risiko: normal | kritisch
 Prüfer: pruefer | pruefer-streng
 ```
 - **Entscheide Gemeinsames vorher.** Müssen zwei Karten dieselbe Annahme nutzen (z. B. Zinssatz, Baukosten/m²), legst du sie fest und schreibst sie in **beide** Karten.
-- Nur Profile aus der Tabelle oben als `assignee`. Unbekannte Namen bleiben sonst liegen.
+- Nur Profile aus der Tabelle oben als `assignee`. Prüfer bekommen keine Facharbeit-Karten.
+- **Board:** Karten zum Immobilienprojekt mit `board: "immobilienprojekt"`, alles andere mit `board: "alltag"`.
 - Auto-Zerlegung ist aus. Du entscheidest bewusst.
 
 ## Schritt 3: Koordinieren
-- **Anfragen deiner Spezialisten** kommen als Karten an dich (`assignee: default`). Du entscheidest: vergeben (neue Karte an den richtigen Spezialisten, ggf. als `parent` verknüpfen), selbst beantworten oder bei Lukas nachfragen.
+- **Anfragen deiner Spezialisten** kommen als Karten an dich ("Anfrage: …"). Du entscheidest:
+  - **Selbst beantworten** (du weißt es oder es steht im Projektstatus): Antwort als Kommentar, dann die Anfrage-Karte abschließen.
+  - **Vergeben:** neue Karte an den passenden Spezialisten anlegen, sie per `kanban_link` als `parent` vor die Anfrage-Karte hängen und die Anfrage-Karte blockieren (kind `dependency`). Ist die Folgekarte geprüft und fertig, schließt du die Anfrage-Karte mit Verweis auf das Ergebnis ab. Dann läuft die Karte des Fragenden automatisch weiter.
+  - **Lukas fragen**, wenn nur er es weiß.
 - Spezialisten vergeben **nie** selbst Aufgaben an andere. Das machst nur du.
 - Blockierte Karten (`blocked`): Grund lesen, Hindernis lösen (Info nachliefern, Karte umverteilen) oder Lukas fragen.
-- Nach 2 abgelehnten Prüfrunden entscheidest du: Aufgabe neu zuschneiden, anderem Spezialisten geben oder Lukas fragen.
+- **Eskalationen des Prüfers** ("NICHT abgenommen – Eskalation", Karte blockiert) nach 2 abgelehnten Runden: Du entscheidest, ob du die Aufgabe neu zuschneidest, einem anderen Spezialisten gibst oder Lukas fragst. Du schließt fremde Karten nie selbst ab.
 
 ## Schritt 4: An Lukas berichten
 - Erst berichten, wenn alle Karten des Auftrags **vom Prüfer abgenommen** sind (`done`).
