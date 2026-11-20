@@ -15,33 +15,40 @@ FREIGABE_PRAEFIXE = ("cloud-ok:", "cloud ok:", "freigabe-cloud:")
 # Bewusste Markierung als privat
 PRIVAT_PRAEFIXE = ("🔒", "privat:", "privat ")
 
-_BETRAG = r"(?:\d{1,3}(?:[.\s]\d{3})+|\d+)(?:,\d+)?\s?(?:€|eur\b|euro\b|tsd\.?|tausend|k\b|mio\.?)"
-_ZINS = r"\d{1,2}(?:[.,]\d{1,3})?\s?%"
+# Zahlen: mit Tausenderpunkt (450.000), lange Zahlen (85000), oder mit Einheit (3,9 %, 450k, 1,2 Mio, 200 €)
+_ZAHL = (r"\d{1,3}(?:[.\s]\d{3})+(?:,\d+)?"
+         r"|\d{4,}(?:,\d+)?"
+         r"|\d+(?:[.,]\d+)?\s?(?:%|prozent\b|k\b|tsd\.?|tausend\b|mio\.?|millionen\b|€|eur\b|euro\b)")
 
 MUSTER_HART = {
-    "IBAN": re.compile(r"\b[A-Z]{2}\d{2}(?:\s?[A-Z0-9]{4}){3,7}(?:\s?[A-Z0-9]{1,3})?\b"),
+    "IBAN": re.compile(r"\b[A-Za-z]{2}\d{2}(?:[\s-]?[A-Za-z0-9]{4}){3,7}(?:[\s-]?[A-Za-z0-9]{1,3})?\b"),
     "Kreditkartennummer": re.compile(r"\b(?:\d[ -]?){13,19}\b"),
     "Steuer-ID": re.compile(r"\b(?:steuer-?id|steueridentifikationsnummer|idnr)[^\d]{0,12}\d{2}\s?\d{3}\s?\d{3}\s?\d{3}\b", re.I),
     "Sozialversicherungsnummer": re.compile(r"\b\d{2}\s?\d{6}\s?[A-Z]\s?\d{3}\b"),
     "Ausweisnummer": re.compile(r"\b(?:personalausweis|ausweis|reisepass)(?:nummer|-nr\.?|nr\.?)?\W{0,5}[CFGHJKLMNPRTVWXYZ0-9]{9}\b", re.I),
 }
 
-# Themenwort + konkrete Zahl in der Nähe = 🔴
-THEMEN = {
-    "Kredit-/Finanzierungsangebot": r"(?:kredit|darlehen|finanzierung|baufinanzierung|annuitätendarlehen)s?\s?(?:angebot|konditionen|zusage|vertrag)|(?:angebot|konditionen|zusage)\s(?:der|von der|vom)\s(?:sparkasse|bank|volksbank|kfw)",
-    "Bank-Konditionen": r"\b(?:sparkasse|volksbank|raiffeisen\w*|bank|kfw)\b.{0,50}\b(?:konditionen|angebot|zusage)\b|\b(?:konditionen|angebot|zusage)\b.{0,50}\b(?:sparkasse|volksbank|bank)\b",
-    "Einkommen": r"\b(?:gehalt|lohn|einkommen|netto|brutto|gehaltsabrechnung|lohnabrechnung)\b",
-    "Kontostand/Vermögen": r"\b(?:kontostand|kontoauszug|depot|vermögen|ersparnisse|eigenkapital|ek\b)",
-    "Schulden": r"\b(?:schulden|restschuld|verbindlichkeiten|schufa)\b",
+# STARK: Themenwort + Zahl in der Nähe genügt (das ist praktisch immer persönlich)
+STARK = {
+    "Kredit-/Finanzierungsangebot": r"(?:kredit|darlehens?|finanzierungs?|baufinanzierungs?)(?:angebot|konditionen|zusage|vertrag)\w*|\bkonditionen\b|\bzusage\b",
+    "Einkommen": r"\b(?:gehalt\w*|lohnabrechnung\w*|gehaltsabrechnung\w*|verdien\w*)",
+    "Kontostand/Schulden": r"\b(?:kontostand\w*|kontoauszug\w*|restschuld\w*|schufa\w*)",
 }
+# WEICH: zählt nur mit Zahl UND (persönlichem Bezug ODER genanntem Kreditgeber)
+WEICH = {
+    "Kredit/Zins": r"\b(?:kredit\w*|darlehen\w*|sollzins\w*|effektivzins\w*|zins\w*|tilgung\w*|rate\b|raten\b|bereitstellungszins\w*)",
+    "Vermögen/Einkommen": r"\b(?:eigenkapital\w*|ek\b|vermögen\w*|ersparnis\w*|erspart\w*|depot\w*|konto\b|konten\b|einkommen\w*|netto\b|brutto\b|schulden\w*)",
+}
+KREDITGEBER = re.compile(r"\b(?:sparkasse\w*|volksbank\w*|raiffeisen\w*|bank\b|banken\b|kfw\b|ing\b|dkb\b|commerzbank|hypovereinsbank|interhyp|dr\.?\s?klein|bausparkasse\w*)", re.I)
 NAEHE = 80  # Zeichen
 
 # Rechenbeispiele mit ausgedachten Zahlen sind nicht privat – außer es ist erkennbar "unseres"
 BEISPIEL_RE = re.compile(r"(?:beispiel\w*|angenommen|annahme|fiktiv\w*|hypothetisch\w*|szenario\w*|z\.\s?b\.)", re.I)
-PERSOENLICH_RE = re.compile(r"\b(?:mein\w*|unser\w*|papa\w*|mama\w*|vater\w*|mutter\w*|bruder\w*|ich habe|wir haben|uns\b|mir\b)", re.I)
+PERSOENLICH_RE = re.compile(r"\b(?:mein\w*|unser\w*|papa\w*|mama\w*|vater\w*|mutter\w*|bruder\w*|ich\b|wir\b|uns\b|mir\b|mich\b)", re.I)
 
-_THEMEN_RE = {k: re.compile(v, re.I) for k, v in THEMEN.items()}
-_ZAHL_RE = re.compile(f"(?:{_BETRAG})|(?:{_ZINS})", re.I)
+_STARK_RE = {k: re.compile(v, re.I) for k, v in STARK.items()}
+_WEICH_RE = {k: re.compile(v, re.I) for k, v in WEICH.items()}
+_ZAHL_RE = re.compile(_ZAHL, re.I)
 
 
 def _luhn_ok(ziffern: str) -> bool:
@@ -59,7 +66,7 @@ def _luhn_ok(ziffern: str) -> bool:
 
 
 def _iban_ok(kandidat: str) -> bool:
-    s = re.sub(r"\s", "", kandidat).upper()
+    s = re.sub(r"[\s-]", "", kandidat).upper()
     if not 15 <= len(s) <= 34:
         return False
     if s[:2] == "DE" and len(s) != 22:
@@ -106,13 +113,18 @@ def bewerte(text: str | None) -> Ergebnis:
             gruende.append(name)
 
     zahlen = [m.start() for m in _ZAHL_RE.finditer(t)]
-    nur_beispiel = bool(BEISPIEL_RE.search(t)) and not PERSOENLICH_RE.search(t)
+    persoenlich = bool(PERSOENLICH_RE.search(t))
+    nur_beispiel = bool(BEISPIEL_RE.search(t)) and not persoenlich
     if zahlen and not nur_beispiel:
-        for name, rx in _THEMEN_RE.items():
-            for m in rx.finditer(t):
-                if any(abs(z - m.start()) <= NAEHE for z in zahlen):
+        def nah(rx):
+            return any(any(abs(z - m.start()) <= NAEHE for z in zahlen) for m in rx.finditer(t))
+        for name, rx in _STARK_RE.items():
+            if nah(rx):
+                gruende.append(name)
+        if persoenlich or KREDITGEBER.search(t):
+            for name, rx in _WEICH_RE.items():
+                if nah(rx):
                     gruende.append(name)
-                    break
 
     gruende = list(dict.fromkeys(gruende))
     if gruende:

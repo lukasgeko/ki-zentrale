@@ -64,6 +64,11 @@ def test_annuitaet_rate_zu_klein():
         r.annuitaet(500_000, 0.04, monatsrate=1_000)
 
 
+def test_zinsbindung_halbes_jahr_abgelehnt():
+    with pytest.raises(r.EingabeFehler):
+        r.annuitaet(100_000, 0.04, anfangstilgung=0.02, zinsbindung_jahre=0.5)
+
+
 def test_annuitaet_genau_eins():
     with pytest.raises(r.EingabeFehler):
         r.annuitaet(500_000, 0.04)
@@ -110,8 +115,12 @@ def test_afa():
     (r.kaufnebenkosten, (0,)), (r.kaufnebenkosten, (100_000, "XX")), (r.rendite, (0, 1000)),
     (r.kaufnebenkosten, (100_000, "BY", 2.0)),  # 200 % → Tippfehler (2 statt 0.02)
     (r.annuitaet, (100_000, 3.9, 0.02)),        # 390 % Zins → Tippfehler
+    (r.annuitaet, (float("nan"), 0.04, 0.02)), (r.rendite, (float("inf"), 1000)),
+    (r.kaufnebenkosten, (100_000, 5)), (r.afa, (100_000, "linear3", 10**9)),
 ])
 def test_unplausible_eingaben(fn, args):
+    if fn is r.kaufnebenkosten and len(args) == 1:
+        args = (args[0], "BY")
     with pytest.raises(r.EingabeFehler):
         fn(*args)
 
@@ -124,7 +133,8 @@ def test_plugin_antwortet_mit_json_und_fehlermeldung():
         def register_tool(self, name, handler, **kw): reg[name] = handler
     mod.register(Ctx())
     assert len(reg) == 7
-    ok = json.loads(reg["immo_kaufnebenkosten"]({"kaufpreis": 1_000_000}))
+    ok = json.loads(reg["immo_kaufnebenkosten"]({"kaufpreis": 1_000_000, "bundesland": "BY"}))
+    assert not json.loads(reg["immo_kaufnebenkosten"]({"kaufpreis": 1_000_000}))["ok"]  # Bundesland Pflicht
     assert ok["ok"] and ok["ergebnis"]["grunderwerbsteuer"] == 35_000
     fehler = json.loads(reg["immo_rendite"]({"gesamtinvestition": 0, "jahreskaltmiete": 1}))
     assert not fehler["ok"] and "größer als 0" in fehler["fehler"]

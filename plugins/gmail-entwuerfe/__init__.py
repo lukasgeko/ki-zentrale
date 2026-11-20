@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 
 try:
     from .gmail_kern import GmailEntwuerfe, Token, GmailFehler, VerbotenerZugriff
@@ -13,10 +14,22 @@ TOKEN_PFAD = os.environ.get("GMAIL_TOKEN_DATEI", "/opt/data/secrets/gmail-token.
 _konto = None
 
 
+TESTMODUS = (Path(__file__).resolve().parent / "TESTMODUS").exists()
+
+
 def _gmail():
     global _konto
     if _konto is None:
-        _konto = GmailEntwuerfe(Token(TOKEN_PFAD))
+        if TESTMODUS:  # Prüf-Profile: simuliertes Postfach, nie das echte Konto
+            try:
+                from .testpostfach import Testpostfach
+            except ImportError:  # pragma: no cover
+                from testpostfach import Testpostfach
+            fake = Testpostfach()
+            _konto = GmailEntwuerfe(Token("/dev/null", transport=fake), transport=fake)
+            _konto.token._zugang, _konto.token._ablauf = "test", 9e18
+        else:
+            _konto = GmailEntwuerfe(Token(TOKEN_PFAD))
     return _konto
 
 

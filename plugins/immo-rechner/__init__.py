@@ -23,7 +23,7 @@ def _werkzeug(fn):
 WERKZEUGE = [
     ("immo_kaufnebenkosten", r.kaufnebenkosten, "Kaufnebenkosten (Grunderwerbsteuer je Bundesland, Notar/Grundbuch, Makler).",
      {"kaufpreis": Z, "bundesland": {"type": "string", "description": "Kürzel, z. B. BY"},
-      "notar_grundbuch_satz": {**Z, "description": "Standard 0.02"}, "makler_satz": {**Z, "description": "Standard 0"}}, ["kaufpreis"]),
+      "notar_grundbuch_satz": {**Z, "description": "Standard 0.02"}, "makler_satz": {**Z, "description": "Standard 0"}}, ["kaufpreis", "bundesland"]),
     ("immo_annuitaet", r.annuitaet, "Annuitätendarlehen: Monatsrate, Tilgungsplan, Restschuld nach Zinsbindung.",
      {"darlehen": Z, "sollzins": {**Z, "description": "z. B. 0.039"}, "anfangstilgung": {**Z, "description": "z. B. 0.02"},
       "monatsrate": Z, "zinsbindung_jahre": {"type": "integer"}, "sondertilgung_pro_jahr": Z}, ["darlehen", "sollzins"]),

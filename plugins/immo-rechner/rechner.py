@@ -6,6 +6,7 @@ Keine Steuer- oder Finanzberatung.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 STAND = "2026-11"
@@ -24,10 +25,14 @@ class EingabeFehler(ValueError):
 
 
 def _pos(name: str, wert: float, null_ok: bool = False) -> float:
+    if isinstance(wert, bool):
+        raise EingabeFehler(f"'{name}' muss eine Zahl sein.")
     try:
         w = float(wert)
     except (TypeError, ValueError):
         raise EingabeFehler(f"'{name}' muss eine Zahl sein.")
+    if not math.isfinite(w):
+        raise EingabeFehler(f"'{name}' ist keine gültige Zahl.")
     if w < 0 or (w == 0 and not null_ok):
         raise EingabeFehler(f"'{name}' muss größer als 0 sein (ist {wert}). Bitte Eingabe prüfen.")
     return w
@@ -40,14 +45,23 @@ def _satz(name: str, wert: float, max_satz: float = 1.0) -> float:
     return w
 
 
+def _jahre(name: str, wert, maximum: int = 50) -> int:
+    w = _pos(name, wert)
+    if int(w) != w or not 1 <= w <= maximum:
+        raise EingabeFehler(f"'{name}' muss eine ganze Zahl zwischen 1 und {maximum} sein (ist {wert}).")
+    return int(w)
+
+
 def r2(x: float) -> float:
     return round(x + 0.0, 2)
 
 
 # ---------------------------------------------------------------- Kaufnebenkosten
-def kaufnebenkosten(kaufpreis: float, bundesland: str = "BY", notar_grundbuch_satz: float = 0.02,
+def kaufnebenkosten(kaufpreis: float, bundesland: str, notar_grundbuch_satz: float = 0.02,
                     makler_satz: float = 0.0) -> dict:
     kp = _pos("kaufpreis", kaufpreis)
+    if not isinstance(bundesland, str):
+        raise EingabeFehler("'bundesland' muss ein Kürzel wie 'BY' sein.")
     bl = bundesland.upper().strip()
     if bl not in GRUNDERWERBSTEUER:
         raise EingabeFehler(f"Unbekanntes Bundesland '{bundesland}'. Kürzel: {', '.join(GRUNDERWERBSTEUER)}")
@@ -81,7 +95,7 @@ def annuitaet(darlehen: float, sollzins: float, anfangstilgung: float | None = N
         rate = _pos("monatsrate", monatsrate)
     if rate <= p * z / 12:
         raise EingabeFehler("Die Rate deckt nicht einmal die Zinsen – das Darlehen würde nie getilgt.")
-    jahre = int(_pos("zinsbindung_jahre", zinsbindung_jahre))
+    jahre = _jahre("zinsbindung_jahre", zinsbindung_jahre)
     st = _pos("sondertilgung_pro_jahr", sondertilgung_pro_jahr, null_ok=True)
     i = z / 12
     rest = p
@@ -135,7 +149,14 @@ def rendite(gesamtinvestition: float, jahreskaltmiete: float, nicht_umlagefaehig
 
 def eigenkapitalrendite(eigenkapital: float, jahresueberschuss_nach_zinsen: float) -> dict:
     ek = _pos("eigenkapital", eigenkapital)
-    u = float(jahresueberschuss_nach_zinsen)
+    if isinstance(jahresueberschuss_nach_zinsen, bool):
+        raise EingabeFehler("'jahresueberschuss_nach_zinsen' muss eine Zahl sein.")
+    try:
+        u = float(jahresueberschuss_nach_zinsen)
+    except (TypeError, ValueError):
+        raise EingabeFehler("'jahresueberschuss_nach_zinsen' muss eine Zahl sein.")
+    if not math.isfinite(u):
+        raise EingabeFehler("'jahresueberschuss_nach_zinsen' ist keine gültige Zahl.")
     return {"eigenkapitalrendite": round(u / ek, 4),
             "annahmen": {"eigenkapital": ek, "jahresueberschuss_nach_zinsen": u}, "hinweis": HINWEIS}
 
@@ -205,7 +226,7 @@ def afa(gebaeudewert: float, methode: str = "linear3", jahre: int = 10) -> dict:
     """linear3: 3 % p. a. (Fertigstellung nach 2022, § 7 Abs. 4 EStG);
     degressiv5: 5 % vom Restwert (§ 7 Abs. 5a EStG, Baubeginn 01.10.2023–30.09.2029), Wechsel zu linear möglich."""
     g = _pos("gebaeudewert", gebaeudewert)
-    n = int(_pos("jahre", jahre))
+    n = _jahre("jahre", jahre, 100)
     plan, rest = [], g
     for j in range(1, n + 1):
         betrag = g * 0.03 if methode == "linear3" else rest * 0.05 if methode == "degressiv5" else None

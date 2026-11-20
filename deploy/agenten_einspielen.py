@@ -17,8 +17,10 @@ Aufruf auf dem Server (Repo liegt in ~/ki-zentrale-repo, Daten in ~/ki-zentrale/
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -39,7 +41,10 @@ ALLE_TOOLSETS = [
     "image_gen", "video_gen", "kanban", "memory", "desktop_ui", "project", "catalog", "safe", "search",
     "session_search", "skills", "terminal", "todo", "tts", "vision", "video", "web", "x_search",
     "gmail_entwuerfe", "immo_rechner",
+    # in toolsets.py vorhanden, nicht in der Doku-Tabelle (kalte Prüfung)
+    "bot_room", "onboarding", "context_engine", "discord", "discord_admin", "feishu_doc", "feishu_drive",
 ]
+# Vor dem ersten echten Lauf mit `hermes tools list` abgleichen: unbekannte Gruppen ergänzen.
 
 
 def profile() -> list[dict]:
@@ -65,7 +70,7 @@ def hermes_name(agent: str, pruef: bool) -> str:
 def schritte(p: dict, pruef: bool) -> list[tuple[str, object]]:
     name = hermes_name(p["name"], pruef)
     pfx = [] if name == "default" else ["-p", name]
-    home = DATEN if name == "default" else DATEN / "profiles" / name
+    home = profil_home(name)
     aus = sorted(set(ALLE_TOOLSETS) - set(p["toolsets"]))
     s: list[tuple[str, object]] = []
     if name != "default" and not home.exists():
@@ -88,16 +93,39 @@ def schritte(p: dict, pruef: bool) -> list[tuple[str, object]]:
     return s
 
 
-def plugins_kopieren(trocken: bool) -> None:
-    ziel = DATEN / "plugins"
-    for pl in sorted((REPO / "plugins").iterdir()):
-        if pl.is_dir():
-            print(f"  📦 Plugin {pl.name} → {ziel / pl.name}")
-            if not trocken:
-                ziel.mkdir(parents=True, exist_ok=True)
-                if (ziel / pl.name).exists():
-                    shutil.move(str(ziel / pl.name), str(ziel / f".{pl.name}.alt"))  # nichts löschen
-                shutil.copytree(pl, ziel / pl.name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+def profil_home(name: str) -> Path:
+    return DATEN if name == "default" else DATEN / "profiles" / name
+
+
+def plugins_kopieren(p: dict, name: str, pruef: bool, trocken: bool) -> None:
+    """Hermes sucht Plugins im Ordner des jeweiligen Profils → in JEDES Profil kopieren."""
+    ziel = profil_home(name) / "plugins"
+    stempel = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    for pl_name in p["plugins"]:
+        quelle = REPO / "plugins" / pl_name
+        print(f"  📦 Plugin {pl_name} → {ziel / pl_name}{'  (TESTMODUS)' if pruef and pl_name == 'gmail-entwuerfe' else ''}")
+        if trocken:
+            continue
+        ziel.mkdir(parents=True, exist_ok=True)
+        if (ziel / pl_name).exists():  # nichts löschen: alte Fassung mit Zeitstempel beiseitelegen
+            alt = ziel.parent / "plugins-alt"
+            alt.mkdir(exist_ok=True)
+            shutil.move(str(ziel / pl_name), str(alt / f"{pl_name}-{stempel}"))
+        shutil.copytree(quelle, ziel / pl_name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        if pruef and pl_name == "gmail-entwuerfe":
+            (ziel / pl_name / "TESTMODUS").write_text("Prüfprofil: simuliertes Postfach, nie das echte Konto.\n")
+
+
+def pruefe_privat_ohne_schluessel(trocken: bool) -> int:
+    env = profil_home("privat") / ".env"
+    if trocken or not env.exists():
+        return 0
+    treffer = [z.split("=", 1)[0] for z in env.read_text().splitlines() if re.match(r"^[A-Z_]*(API_KEY|TOKEN)=.+", z)]
+    if treffer:
+        print(f"  ❌ Profil privat enthält Cloud-Schlüssel ({', '.join(treffer)}). Bitte mit Claude entfernen (Proceed nötig).")
+        return 1
+    print("  ✅ Profil privat hat keine Cloud-Schlüssel")
+    return 0
 
 
 def main(argv=None) -> int:
@@ -109,21 +137,29 @@ def main(argv=None) -> int:
     ap.add_argument("--ohne-pruefprofile", action="store_true")
     a = ap.parse_args(argv)
 
-    plugins_kopieren(a.trocken)
     fehler = 0
     for p in profile():
         if a.agent and p["name"] not in a.agent:
             continue
         for pruef in ([False] if a.ohne_pruefprofile else [False, True]):
-            print(f"▶ {hermes_name(p['name'], pruef)}")
-            for art, inhalt in schritte(p, pruef):
+            name = hermes_name(p["name"], pruef)
+            print(f"▶ {name}")
+            erst_anlegen = [s for s in schritte(p, pruef) if s[0] == "befehl" and s[1][:2] == ["profile", "create"]]
+            rest = [s for s in schritte(p, pruef) if s not in erst_anlegen]
+            for art, inhalt in erst_anlegen:
+                cmd = shlex.split(HERMES) + list(inhalt)
+                print("  $ " + " ".join(shlex.quote(c) for c in cmd))
+                if not a.trocken and subprocess.run(cmd).returncode != 0:
+                    fehler += 1
+            plugins_kopieren(p, name, pruef, a.trocken)
+            for art, inhalt in rest:
                 if art == "datei":
                     pfad, text = inhalt
                     print(f"  📝 {pfad}")
                     if not a.trocken:
                         pfad.parent.mkdir(parents=True, exist_ok=True)
                         if pfad.exists():
-                            shutil.copy2(pfad, pfad.with_suffix(".md.bak"))
+                            shutil.copy2(pfad, pfad.with_name(f"SOUL.bak-{dt.datetime.now():%Y%m%d-%H%M%S}.md"))
                         pfad.write_text(text)
                 else:
                     cmd = shlex.split(HERMES) + list(inhalt)
@@ -133,8 +169,13 @@ def main(argv=None) -> int:
                         if r.returncode != 0:
                             fehler += 1
                             print(f"    ❌ {r.stderr.strip()[-300:]}")
+    fehler += pruefe_privat_ohne_schluessel(a.trocken)
     if not a.trocken:
-        print("\nDanach: Hermes neu starten (cd ~/ki-zentrale && docker compose restart) und Prüflauf starten.")
+        print("\nDanach: 1) Hermes neu starten (cd ~/ki-zentrale && docker compose restart)")
+        print("        2) je Profil prüfen: hermes -p <name> plugins list  → alle Plugins 'enabled'? Sonst STOPP.")
+        print("        3) Prüflauf: python3 evals/pruefen.py --alle")
+    print("\nHinweis Phase 3: Übergaben Chef → Spezialisten brauchen das Plugin 'advanced-delegation' mit "
+          "delegation.backend=profile_routes. Wird mit Claude Code gegen die aktuelle Doku eingerichtet.")
     print(f"\n{'Probelauf' if a.trocken else 'Fertig'}: {fehler} Fehler.")
     return 1 if fehler else 0
 

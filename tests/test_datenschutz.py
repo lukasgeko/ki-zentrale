@@ -1,4 +1,4 @@
-import importlib.util, pathlib, sys
+import importlib.util, json, pathlib, sys
 import pytest
 
 BASIS = pathlib.Path(__file__).resolve().parents[1] / "plugins" / "datenschutz-weiche"
@@ -21,6 +21,17 @@ ROT = [
     "🔒 Wie mache ich das am besten?",
     "privat: was denkst du über X",
     "Beispiel mit unserem Darlehensangebot: 3,9 % auf 500.000 €",
+    # Fälle aus der kalten Prüfung (vorher nicht erkannt)
+    "Die Sparkasse bietet uns 450.000 € zu 3,9 % Sollzins an.",
+    "Darlehen über 450k zu 3,9% bei der Sparkasse",
+    "Mein Gehalt ist 4.200 netto",
+    "Unser Kontostand: 23.400,12",
+    "Auf dem Konto haben wir 85.000 EUR",
+    "meine IBAN ist de89 3704 0044 0532 0130 00",
+    "IBAN DE89-3704-0044-0532-0130-00",
+    "Restschuld 210.000",
+    "Ich verdiene 3.100 im Monat",
+    "Zinsen 3,9 Prozent auf unser Darlehen von 450 Tsd",
 ]
 OK = [
     "Wie hoch ist die Grunderwerbsteuer in Bayern? 3,5 %?",
@@ -33,6 +44,12 @@ OK = [
     "Bestellnummer DE12 ABCD 1234 5678 9012 34", # ungültige IBAN-Prüfziffer
     "",
     None,
+    # Fehlalarme aus der kalten Prüfung
+    "Wie viel Eigenkapital braucht man typischerweise für 400.000 €?",
+    "Depot-Anbieter mit 0 € Ordergebühr",
+    "Bauleiter brutto 60k",
+    "Wie hoch sind die Bauzinsen aktuell, so um 3,5 %?",
+    "Die Baukosten liegen bei 4.500 €/m² Wohnfläche.",
 ]
 
 @pytest.mark.parametrize("text", ROT)
@@ -62,16 +79,43 @@ def test_websuche_freigabe_praefix_hilft_nicht():
     r = weiche.vor_werkzeug(tool_name="web_search", args={"query": "cloud-ok: IBAN DE89370400440532013000"})
     assert r and r["action"] == "block"
 
-def test_uebergabe_an_privat_erlaubt():
+def test_uebergabe_mit_privaten_daten_immer_blockiert():
     args = {"goal": "Vergleiche mein Kreditangebot 450.000 € zu 3,9 %", "profile": "privat"}
-    assert weiche.vor_werkzeug(tool_name="delegate_task", args=args) is None
+    assert weiche.vor_werkzeug(tool_name="delegate_task", args=args)["action"] == "block"
+
+
+@pytest.mark.parametrize("tool", ["memory", "cronjob", "image_generate", "text_to_speech", "mcp_irgendwas", "browser_vault"])
+def test_unbekannte_werkzeuge_mit_privaten_daten_blockiert(tool):
+    r = weiche.vor_werkzeug(tool_name=tool, args={"text": "Mein Gehalt ist 4.200 netto"})
+    assert r and r["action"] == "block"
+
+
+@pytest.mark.parametrize("pfad", ["/opt/data/secrets/gmail-token.json", "/opt/data/.env", "../auth.json", "client_secret_123.json"])
+def test_geheimnisse_fuer_alle_werkzeuge_gesperrt(pfad):
+    assert weiche.vor_werkzeug(tool_name="read_file", args={"path": pfad})["action"] == "block"
+
+
+def test_lokale_werkzeuge_mit_privaten_daten_erlaubt():
+    assert weiche.vor_werkzeug(tool_name="immo_annuitaet", args={"darlehen": 450000, "text": "mein Kredit 450.000 €"}) is None
+
+
+def test_mail_mit_kreditangebot_wird_zurueckgehalten():
+    mail = json.dumps({"ok": True, "ergebnis": {"betreff": "Ihr Finanzierungsangebot",
+        "inhalt": "Sehr geehrter Herr, wir bieten Ihnen ein Darlehen über 450.000 € zu 3,9 % Sollzins an. Ihre Sparkasse"}})
+    neu = weiche.nach_werkzeug(result=mail, tool_name="gmail_lesen")
+    assert neu and "🔒" in neu and "450.000" not in neu
+
+
+def test_json_escapes_werden_erkannt():
+    mail = json.dumps({"inhalt": "Kontostand 23.400,12 € auf unserem Konto"}, ensure_ascii=True)
+    assert "🔒" in weiche.nach_werkzeug(result=mail, tool_name="read_file")
 
 def test_uebergabe_an_cloud_agent_blockiert():
     args = {"goal": "Vergleiche mein Kreditangebot 450.000 € zu 3,9 %", "profile": "recherche"}
     assert weiche.vor_werkzeug(tool_name="delegate_task", args=args)["action"] == "block"
 
-def test_andere_werkzeuge_unberuehrt():
-    assert weiche.vor_werkzeug(tool_name="read_file", args={"path": "IBAN DE89370400440532013000"}) is None
+def test_lokales_werkzeug_unberuehrt():
+    assert weiche.vor_werkzeug(tool_name="read_file", args={"path": "projekte/notiz IBAN DE89370400440532013000"}) is None
 
 def test_schwaerzen_in_mail():
     text = "Bitte zahlen auf DE89 3704 0044 0532 0130 00, Steuer-ID 12 345 678 901. Gruß"

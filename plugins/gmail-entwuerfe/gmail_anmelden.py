@@ -15,6 +15,7 @@ import os
 import secrets
 import sys
 import threading
+import urllib.error
 import urllib.parse
 import urllib.request
 import webbrowser
@@ -47,7 +48,7 @@ def main():
 
     srv = http.server.HTTPServer(("127.0.0.1", 0), H)
     redirect = f"http://127.0.0.1:{srv.server_port}"
-    t = threading.Thread(target=srv.handle_request); t.start()
+    t = threading.Thread(target=srv.handle_request, daemon=True); t.start()
     url = AUTH + "?" + urllib.parse.urlencode({
         "client_id": cid, "redirect_uri": redirect, "response_type": "code", "scope": SCOPE,
         "access_type": "offline", "prompt": "consent", "state": state,
@@ -60,7 +61,10 @@ def main():
     body = urllib.parse.urlencode({"code": ergebnis["code"], "client_id": cid, "client_secret": csec,
                                    "redirect_uri": redirect, "grant_type": "authorization_code",
                                    "code_verifier": verifier}).encode()
-    j = json.load(urllib.request.urlopen(urllib.request.Request(TOKEN, data=body)))
+    try:
+        j = json.load(urllib.request.urlopen(urllib.request.Request(TOKEN, data=body), timeout=30))
+    except (urllib.error.HTTPError, urllib.error.URLError) as e:
+        print(f"❌ Google hat die Anmeldung abgelehnt ({e}). Bitte erneut versuchen."); sys.exit(1)
     if "refresh_token" not in j:
         print("❌ Google hat keinen Dauer-Schlüssel geliefert. Bitte erneut versuchen."); sys.exit(1)
     if SCOPE not in j.get("scope", ""):
@@ -69,6 +73,7 @@ def main():
     fd = os.open(ziel, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as f:
         json.dump({"client_id": cid, "client_secret": csec, "refresh_token": j["refresh_token"]}, f)
+    os.chmod(ziel, 0o600)
     print(f"✅ Gespeichert: {ziel}  (geheim! nicht teilen, nicht ins Repo)")
 
 
