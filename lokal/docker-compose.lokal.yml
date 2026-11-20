@@ -11,8 +11,8 @@ services:
     volumes:
       - ${KI_LOKAL_DIR:?KI_LOKAL_DIR fehlt}/hermes-data:/opt/data
     environment:
-      - HERMES_UID=1000
-      - HERMES_GID=1000
+      - HERMES_UID=${HERMES_UID:?HERMES_UID fehlt}   # = deine Mac-Benutzerkennung, damit die geschützten Dateien lesbar bleiben
+      - HERMES_GID=${HERMES_GID:?HERMES_GID fehlt}
       - HERMES_DASHBOARD=1
       - HERMES_DASHBOARD_HOST=0.0.0.0   # im Container nötig, damit der Port erreichbar ist (Login ist Pflicht)
       - HERMES_DASHBOARD_PORT=9119
