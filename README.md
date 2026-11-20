@@ -12,7 +12,7 @@ Lukas' private KI-Plattform: ein Team aus KI-Agenten auf einem eigenen Server, e
 | `plugins/immo-rechner/` | Kaufnebenkosten, Annuität, Rendite, Verkauf, Sensitivität, AfA | ✅ getestet (von Hand nachgerechnet) |
 | `evals/` | 121 Prüfungsfragen + automatischer Prüflauf (`pruefen.py`) | ✅ Trockenlauf getestet |
 | `deploy/` | Spielt Agenten + Plugins in Hermes ein (pro Profil, Prüf-Zwillinge mit Test-Postfach) | ⚠️ in Testordner erprobt; erster echter Lauf mit Claude Code |
-| `tests/` | 150 automatische Tests: `python3 -m pytest -q` | ✅ alle grün |
+| `tests/` | 200 automatische Tests: `python3 -m pytest -q` | ✅ alle grün |
 
 Zwei unabhängige Sicherheitsprüfungen (Opus, ohne Vorwissen) wurden durchgeführt; alle BLOCKER- und HOCH-Befunde sind behoben und mit Tests abgesichert.
 
